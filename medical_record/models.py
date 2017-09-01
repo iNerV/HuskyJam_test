@@ -34,16 +34,6 @@ class Record(models.Model):
     class Meta:
         unique_together = ('doctor', 'on_time', 'on_day')
 
-    def clean(self):
-        if self.on_time.hour >= self.doctor.department.to_hour.hour-1 \
-                or self.on_time < self.doctor.department.from_hour:
-            raise ValidationError(_('Out of range time.'))
-
-        if self.is_holiday(self.doctor.department.from_day,
-                           self.doctor.department.to_day,
-                           self.on_day):
-            raise ValidationError(_('Out of range work days.'))
-
     def is_holiday(self, from_day, to_day, day):
         week = [0, 1, 2, 3, 4, 5, 6]
         if from_day > to_day:
@@ -60,6 +50,16 @@ class Record(models.Model):
             return True
         return False
 
+    def clean(self):
+        if self.on_time.hour >= self.doctor.department.to_hour.hour-1 \
+                or self.on_time < self.doctor.department.from_hour:
+            raise ValidationError(_('Out of range time.'))
+
+        if self.is_holiday(self.doctor.department.from_day,
+                           self.doctor.department.to_day,
+                           self.on_day):
+            raise ValidationError(_('Out of range work days.'))
+
     def save(self, *args, **kwargs):
         self.clean()
         return super(Record, self).save(*args, **kwargs)
@@ -67,4 +67,4 @@ class Record(models.Model):
     def __str__(self):
         return 'at {hour} on {day} to {doctor}'.format(doctor=self.doctor.name,
                                                        hour=time_to_str(self.on_time),
-                                                       day=WEEKDAYS[self.on_day.weekday()][1])
+                                                       day=self.on_day)
