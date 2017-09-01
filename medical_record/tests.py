@@ -37,11 +37,11 @@ class MedicalRecordModelTests(TestCase):
         self.assertTrue(isinstance(d, Doctor))
         self.assertEqual(d.__str__(), d.name)
 
-    def create_record(self, doctor='', on_time=str_to_time('11:00'),
+    def create_record(self, doctor='', full_name='Joe Doe', on_time=str_to_time('11:00'),
                       on_day=1):
         if doctor == '':
             doctor = self.create_doctor()
-        return Record.objects.create(doctor=doctor, on_time=on_time, on_day=on_day)
+        return Record.objects.create(doctor=doctor, full_name=full_name, on_time=on_time, on_day=on_day)
 
     def test_record_creation(self):
         r = self.create_record()
