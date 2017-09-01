@@ -1,7 +1,10 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from .utils import time_to_str
+from datetime import timedelta, time, datetime, date
+
+from .utils import time_to_str, str_to_time
 
 WEEKDAYS = [
     (1, _("Monday")),
@@ -41,6 +44,14 @@ class Record(models.Model):
 
     class Meta:
         unique_together = ('doctor', 'on_time', 'on_day')
+
+    def clean(self):
+        if self.on_time > self.doctor.department.to_hour or self.on_time < self.doctor.department.from_hour:
+            raise ValidationError(_('Out of range time.'))
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        return super(Record, self).save(*args, **kwargs)
 
     def __str__(self):
         return 'at {hour} on {day} to {doctor}'.format(doctor=self.doctor.name,
