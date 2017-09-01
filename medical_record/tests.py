@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 
 from .models import Department, Doctor, Record
 from .utils import time_to_str, str_to_time
@@ -27,17 +28,19 @@ class MedicalRecordModelTests(TestCase):
         self.assertTrue(isinstance(d, Department))
         self.assertEqual(d.__str__(), d.title)
 
-    def create_doctor(self, name="House", department=create_department().pk):
-        return Doctor.objects.create(name=name, depatment=department)
+    def create_doctor(self, name="House"):
+        department = self.create_department()
+        return Doctor.objects.create(name=name, department=department)
 
     def test_doctor_creation(self):
         d = self.create_doctor()
         self.assertTrue(isinstance(d, Doctor))
         self.assertEqual(d.__str__(), d.name)
 
-    def create_record(self, doctor=create_doctor(),
-                      on_time=str_to_time('11:00'),
+    def create_record(self, doctor='', on_time=str_to_time('11:00'),
                       on_day=1):
+        if doctor == '':
+            doctor = self.create_doctor()
         return Record.objects.create(doctor=doctor, on_time=on_time, on_day=on_day)
 
     def test_record_creation(self):
@@ -48,9 +51,10 @@ class MedicalRecordModelTests(TestCase):
                                                                               day=r.on_day))
 
     def test_record_creation_same_times(self):
-        d = self.create_doctor()
+        department = self.create_department()
+        d = Doctor.objects.create(name='Web', department=department)
         self.create_record(doctor=d, on_time=str_to_time('13:00'))
-        self.assertRaises(ValidationError, self.create_record, doctor=d, on_time=str_to_time('13:00'))
+        self.assertRaises(IntegrityError, self.create_record, doctor=d, on_time=str_to_time('13:00'))
 
     def test_record_creation_after_hours(self):
         self.assertRaises(ValidationError, self.create_record, on_time=str_to_time('23:00'))
