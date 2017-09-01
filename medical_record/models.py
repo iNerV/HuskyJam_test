@@ -49,6 +49,9 @@ class Record(models.Model):
         if self.on_time > self.doctor.department.to_hour or self.on_time < self.doctor.department.from_hour:
             raise ValidationError(_('Out of range time.'))
 
+        if self.on_day < self.doctor.department.from_day or self.on_day > self.doctor.department.to_day:
+            raise ValidationError(_('Out of range work days.'))
+
     def save(self, *args, **kwargs):
         self.clean()
         return super(Record, self).save(*args, **kwargs)
@@ -56,4 +59,4 @@ class Record(models.Model):
     def __str__(self):
         return 'at {hour} on {day} to {doctor}'.format(doctor=self.doctor.name,
                                                        hour=time_to_str(self.on_time),
-                                                       day=self.on_day)
+                                                       day=self.get_on_day_display())

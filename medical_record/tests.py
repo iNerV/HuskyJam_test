@@ -48,7 +48,7 @@ class MedicalRecordModelTests(TestCase):
         self.assertTrue(isinstance(r, Record))
         self.assertEqual(r.__str__(), 'at {hour} on {day} to {doctor}'.format(doctor=r.doctor.name,
                                                                               hour=time_to_str(r.on_time),
-                                                                              day=r.on_day))
+                                                                              day=r.get_on_day_display()))
 
     def test_record_creation_same_times(self):
         department = self.create_department()
