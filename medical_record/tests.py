@@ -59,5 +59,8 @@ class MedicalRecordModelTests(TestCase):
     def test_record_creation_after_hours(self):
         self.assertRaises(ValidationError, self.create_record, on_time=str_to_time('23:00'))
 
+    def test_record_creation_before_hours(self):
+        self.assertRaises(ValidationError, self.create_record, on_time=str_to_time('06:00'))
+
     def test_record_creation_weekend(self):
         self.assertRaises(ValidationError, self.create_record, on_day=6)
