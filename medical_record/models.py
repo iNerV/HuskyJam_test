@@ -2,9 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from datetime import timedelta, time, datetime, date
-
-from .utils import time_to_str, str_to_time
+from .utils import time_to_str
 
 WEEKDAYS = [
     (1, _("Monday")),
