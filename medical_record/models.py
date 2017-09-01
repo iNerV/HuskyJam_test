@@ -39,6 +39,7 @@ class Doctor(models.Model):
 
 class Record(models.Model):
     doctor = models.ForeignKey(Doctor)
+    full_name = models.CharField(max_length=30)
     on_time = models.TimeField()
     on_day = models.IntegerField(choices=WEEKDAYS)
 
