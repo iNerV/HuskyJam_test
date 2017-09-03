@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 
 from .models import Department, Doctor, Record
-from .utils import time_to_str, str_to_time, WEEKDAYS
+from .utils import time_to_str, str_to_time
 
 
 class MedicalRecordModelTests(TestCase):
@@ -17,13 +17,15 @@ class MedicalRecordModelTests(TestCase):
                           from_hour=str_to_time('09:00'),
                           to_hour=str_to_time('18:00'),
                           from_day=0,
-                          to_day=4):
+                          to_day=4,
+                          duration_of_reception=60):
         return Department.objects.create(title=title,
                                          description=description,
                                          from_hour=from_hour,
                                          to_hour=to_hour,
                                          from_day=from_day,
-                                         to_day=to_day)
+                                         to_day=to_day,
+                                         duration_of_reception=duration_of_reception)
 
     def test_department_creation(self):
         d = self.create_department()
@@ -40,7 +42,7 @@ class MedicalRecordModelTests(TestCase):
         self.assertEqual(d.__str__(), d.name)
 
     def create_record(self, doctor='', full_name='Joe Doe', on_time=str_to_time('11:00'),
-                      on_day=datetime.today()):
+                      on_day=date(2017, 8, 28)):
         if doctor == '':
             doctor = self.create_doctor()
         return Record.objects.create(doctor=doctor, full_name=full_name, on_time=on_time, on_day=on_day)
@@ -51,12 +53,6 @@ class MedicalRecordModelTests(TestCase):
         self.assertEqual(r.__str__(), 'at {hour} on {day} to {doctor}'.format(doctor=r.doctor.name,
                                                                               hour=time_to_str(r.on_time),
                                                                               day=r.on_day))
-
-    def test_record_creation_same_times(self):
-        department = self.create_department()
-        d = Doctor.objects.create(name='Web', department=department)
-        self.create_record(doctor=d, on_time=str_to_time('13:00'))
-        self.assertRaises(IntegrityError, self.create_record, doctor=d, on_time=str_to_time('13:00'))
 
     def test_record_creation_after_hours(self):
         self.assertRaises(ValidationError, self.create_record, on_time=str_to_time('18:00'))
@@ -71,3 +67,9 @@ class MedicalRecordModelTests(TestCase):
         department = self.create_department(from_day=6, to_day=1)
         d = Doctor.objects.create(name='Web', department=department)
         self.assertRaises(ValidationError, self.create_record, doctor=d, on_day=date(2017, 8, 28))
+
+    def test_record_creation_during_another_record(self):
+        department = self.create_department(duration_of_reception=45)
+        d = Doctor.objects.create(name='Watson', department=department)
+        self.create_record(doctor=d, on_time=str_to_time('09:00'))
+        self.assertRaises(ValidationError, self.create_record, doctor=d, on_time=str_to_time('09:35'))
