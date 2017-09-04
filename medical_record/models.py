@@ -28,9 +28,9 @@ class Doctor(models.Model):
 
 class Record(models.Model):
     doctor = models.ForeignKey(Doctor)
-    full_name = models.CharField(max_length=30)
-    on_time = models.TimeField()
-    on_day = models.DateField()
+    full_name = models.CharField(max_length=30, blank=False)
+    on_time = models.TimeField(blank=False)
+    on_day = models.DateField(blank=False)
 
     class Meta:
         unique_together = ('doctor', 'on_time', 'on_day')
@@ -62,6 +62,9 @@ class Record(models.Model):
         return False
 
     def clean(self):
+        if self.doctor_id is None:
+            return
+
         if self.on_time.hour >= self.doctor.department.to_hour.hour-1 \
                 or self.on_time < self.doctor.department.from_hour:
             raise ValidationError(_('Out of range time.'))

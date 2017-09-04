@@ -2,10 +2,11 @@ from datetime import datetime, date
 
 from django.test import TestCase
 from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
+
 
 from .models import Department, Doctor, Record
 from .utils import time_to_str, str_to_time
+from .forms import RecordForm
 
 
 class MedicalRecordModelTests(TestCase):
@@ -73,3 +74,31 @@ class MedicalRecordModelTests(TestCase):
         d = Doctor.objects.create(name='Watson', department=department)
         self.create_record(doctor=d, on_time=str_to_time('09:00'))
         self.assertRaises(ValidationError, self.create_record, doctor=d, on_time=str_to_time('09:35'))
+
+    #  test form
+
+    def test_init_without_doctor(self):
+        with self.assertRaises(KeyError):
+            RecordForm()
+
+    def test_valid_data(self):
+        doctor = self.create_doctor()
+        data = {
+            'full_name': "Turanga Leela",
+            'on_day': "2017-08-28",
+            'on_time': str_to_time('11:00'),
+        }
+        form = RecordForm(data, doctor=doctor)
+
+        self.assertTrue(form.is_valid())
+        record = form.save()
+
+        self.assertEqual(record.full_name, "Turanga Leela")
+        self.assertEqual(record.on_day, date(2017, 8, 28))
+        self.assertEqual(record.on_time, str_to_time('11:00'))
+        self.assertEqual(record.doctor, doctor)
+
+    def test_blank_data(self):
+        doctor = self.create_doctor()
+        form = RecordForm(doctor=doctor)
+        self.assertFalse(form.is_valid())
