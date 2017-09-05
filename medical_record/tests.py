@@ -108,12 +108,22 @@ class MedicalRecordModelTests(TestCase):
 
 # test views
 
+    def test_main_page(self):
+        response = self.client.get(reverse('main_page'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Doctors')
+        self.assertContains(response, 'Departments')
+
+    def test_success_page(self):
+        response = self.client.get(reverse('success_page'))
+        self.assertEqual(response.status_code, 200)
+
     def test_list_of_departments(self):
-        response = self.client.get(reverse('departments_list'))
+        response = self.client.get(reverse('department_list'))
         self.assertEqual(response.status_code, 200)
 
     def test_list_of_doctors(self):
-        response = self.client.get(reverse('doctors_list'))
+        response = self.client.get(reverse('doctor_list'))
         self.assertEqual(response.status_code, 200)
 
     def test_department_detail_404(self):

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{{ department.title }}</h1>
+{% for doctor in doctors %}
+    <div class="card" style="width: 20rem;">
+        <div class="card-body">
+            <h4 class="card-title">{{ doctor.name }}</h4>
+            <a href={% url 'doctor_detail' doctor.pk %} class="card-link">Enroll</a>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}
