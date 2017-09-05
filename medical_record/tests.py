@@ -1,7 +1,9 @@
-from datetime import datetime, date
+from datetime import date
 
+import sys
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 
 
 from .models import Department, Doctor, Record
@@ -11,7 +13,8 @@ from .forms import RecordForm
 
 class MedicalRecordModelTests(TestCase):
 
-    def create_department(self, title="Cardiology",
+    @staticmethod
+    def create_department(title="Cardiology",
                           description="This department provides medical care to patients who have problems"
                                       "with their heart or circulation. It treats people on an inpatient and"
                                       "outpatient basis.",
@@ -75,7 +78,7 @@ class MedicalRecordModelTests(TestCase):
         self.create_record(doctor=d, on_time=str_to_time('09:00'))
         self.assertRaises(ValidationError, self.create_record, doctor=d, on_time=str_to_time('09:35'))
 
-    #  test form
+# test form
 
     def test_init_without_doctor(self):
         with self.assertRaises(KeyError):
@@ -98,7 +101,37 @@ class MedicalRecordModelTests(TestCase):
         self.assertEqual(record.on_time, str_to_time('11:00'))
         self.assertEqual(record.doctor, doctor)
 
-    def test_blank_data(self):
+    def test_blank_data(self):  # useless test © official docs
         doctor = self.create_doctor()
         form = RecordForm(doctor=doctor)
         self.assertFalse(form.is_valid())
+
+# test views
+
+    def test_list_of_departments(self):
+        response = self.client.get(reverse('departments_list'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_list_of_doctors(self):
+        response = self.client.get(reverse('doctors_list'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_department_detail_404(self):
+        response = self.client.get(reverse('department_detail', args=(sys.maxsize,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_doctor_detail_404(self):
+        response = self.client.get(reverse('doctor_detail', args=(sys.maxsize,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_department_detail_success(self):
+        department = self.create_department()
+        response = self.client.get(reverse('department_detail', args=(department.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Cardiology')
+
+    def test_doctor_detail_success(self):
+        doctor = self.create_doctor()
+        response = self.client.get(reverse('doctor_detail', args=(doctor.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'House')
